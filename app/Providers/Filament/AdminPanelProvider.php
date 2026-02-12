@@ -136,11 +136,10 @@ class AdminPanelProvider extends PanelProvider
                 FilamentAuthenticationLogPlugin::make(),
 
                 QuickCreatePlugin::make()
-                ->includes([
-                    \App\Filament\Resources\UserResource::class,
-                ]),
-
-                    ];
+                    ->includes([
+                        \App\Filament\Resources\UserResource::class,
+                    ]),
+            ]);
 
         // Register a small locale switcher to appear on the My Profile page and in the user menu profile area
         FilamentView::registerRenderHook(
