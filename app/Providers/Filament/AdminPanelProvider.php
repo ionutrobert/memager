@@ -144,14 +144,14 @@ class AdminPanelProvider extends PanelProvider
         // Register a small locale switcher to appear on the My Profile page and in the user menu profile area
         FilamentView::registerRenderHook(
             \Filament\View\PanelsRenderHook::PAGE_START,
-            fn () => view('livewire.locale-switcher'),
+            fn () => \Livewire\Livewire::mount('locale-switcher')->html(),
             scopes: [\Jeffgreco13\FilamentBreezy\Pages\MyProfilePage::class]
         );
 
         // Inject locale switcher into the user menu profile area (appears in the account dropdown)
         FilamentView::registerRenderHook(
             \Filament\View\PanelsRenderHook::USER_MENU_PROFILE_AFTER,
-            fn () => view('livewire.locale-switcher')
+            fn () => \Livewire\Livewire::mount('locale-switcher')->html()
         );
         return $panel;
     }
