@@ -39,7 +39,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        $panel = $panel
             ->default()
             ->id('admin')
             ->path('')
@@ -140,15 +140,20 @@ class AdminPanelProvider extends PanelProvider
                     \App\Filament\Resources\UserResource::class,
                 ]),
 
-                    ]);
+                    ];
 
-        // Register a small locale switcher to appear on the My Profile page
+        // Register a small locale switcher to appear on the My Profile page and in the user menu profile area
         FilamentView::registerRenderHook(
             \Filament\View\PanelsRenderHook::PAGE_START,
             fn () => view('livewire.locale-switcher'),
             scopes: [\Jeffgreco13\FilamentBreezy\Pages\MyProfilePage::class]
         );
 
-
+        // Inject locale switcher into the user menu profile area (appears in the account dropdown)
+        FilamentView::registerRenderHook(
+            \Filament\View\PanelsRenderHook::USER_MENU_PROFILE_AFTER,
+            fn () => view('livewire.locale-switcher')
+        );
+        return $panel;
     }
 }
