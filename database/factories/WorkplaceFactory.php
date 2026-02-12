@@ -20,8 +20,8 @@ class WorkplaceFactory extends Factory
             'adresa'    => $this->faker->address(),
             'oras'      => $this->faker->city(),
             'judet'     => $this->faker->randomElement(['Bucuresti', 'Cluj', 'Iasi', 'Timis', 'Constanta', 'Brasov', 'Galati', 'Dolj', 'Suceava', 'Prahova']),
-            'contact'   => json_encode(['contact' => $this->faker->phoneNumber()]),
-            'info'      => json_encode(['contact_person' => $this->faker->name()]),
+            'contact'   => $this->faker->phoneNumber(),
+            'info'      => $this->faker->name(),
         ];
     }
 }

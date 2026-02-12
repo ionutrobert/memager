@@ -45,151 +45,172 @@ class MemberResource extends Resource
 
     public static function infolist(Infolist $infolist): Infolist
     {
-
-
         return $infolist
             ->schema([
-
-                Section::make('Identitate')
+                // CNP Section with validation badge
+                Section::make(__('lang.cnp.section_title'))
                     ->schema([
                         Infolists\Components\TextEntry::make('CNP')
-                            ->label('CNP'),
-                        Infolists\Components\TextEntry::make('CNPValid')
-                            ->label('Validitate CNP')
+                            ->label(__('lang.cnp.label'))
+                            ->inlineLabel()
+                            ->icon(fn(Member $record) => CNP::valid($record->CNP) ? 'heroicon-o-shield-check' : 'heroicon-o-shield-exclamation')
+                            ->iconColor(fn(Member $record) => CNP::valid($record->CNP) ? 'success' : 'danger'),
+Infolists\Components\TextEntry::make('CIValid')
+                            ->label(__('lang.identity.ci_status'))
+                            ->inlineLabel()
                             ->badge()
                             ->color(fn(string $state): string => match ($state) {
-                                'Valid'                           => 'success',
-                                'Invalid'                         => 'danger',
+                                'Valid' => 'success',
+                                'Expirat' => 'danger',
                             })
-                            ->default(CNP::valid($infolist->getRecord()->CNP) ? 'Valid' : 'Invalid'),
+                            ->default(fn(Member $record) => Carbon::createFromDate($record->data_expirare)->gt(Carbon::today()) ? 'Valid' : 'Expirat'),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
 
-
-                        Infolists\Components\Fieldset::make('Carte de Identitate')
+                // Identity Card Section
+                Section::make(__('lang.identity.card_title'))
+                    ->schema([
+                        Infolists\Components\Fieldset::make(__('lang.identity.latest_id_card'))
                             ->schema([
+                        Infolists\Components\TextEntry::make('latest_identity_name')
+                            ->label(__('lang.identity.full_name'))
+                            ->state(fn(Member $record) => $record->previous_identities()->latest('data_emitere')->first()?->full_name ?? $record->full_name),
 
-                                Infolists\Components\TextEntry::make('full_name'),
-                                Infolists\Components\TextEntry::make('CI')
-                                    ->label('Carte identitate'),
-                                Infolists\Components\TextEntry::make('data_emitere')
-                                    ->date(),
-                                Infolists\Components\TextEntry::make('data_expirare')
-                                    ->date(),
+                        Infolists\Components\TextEntry::make('CI')
+                            ->label(__('lang.identity.ci_number')),
 
-                                Infolists\Components\TextEntry::make('CIValid')
-                                    ->label('Valabilitate Carte identitate')
-                                    ->badge()
-                                    ->color(fn(string $state): string => match ($state) {
-                                        'Valid'                           => 'success',
-                                        'Expirat'                         => 'danger',
-                                    })
-                                    ->default(Carbon::createFromDate($infolist->getRecord()->data_expirare)->gt(Carbon::today()) ? 'Valid' : 'Expirat')
-                                    ->prefix(
-                                        fn(string $state): string => match ($state) {
-                                            'Valid'                   => 'Expira ' . Carbon::createFromDate($infolist->getRecord()->data_expirare)->diffForHumans() . ' - ',
-                                            'Expirat'                 => ' ',
-                                        }
-                                    )
-                                    ->suffix(
-                                        fn(string $state): string => match ($state) {
-                                            'Valid'                   => ' ',
-                                            'Expirat'                 => ' cu ' . Carbon::createFromDate($infolist->getRecord()->data_expirare)->diffForHumans(),
-                                        }
-                                    ),
-                                Infolists\Components\Fieldset::make('Adresa Actuala')
-                                    ->schema([
-                                        Infolists\Components\TextEntry::make('domiciliu'),
-                                        Infolists\Components\TextEntry::make('oras'),
-                                        Infolists\Components\TextEntry::make('judet'),
+                        Infolists\Components\TextEntry::make('data_emitere')
+                            ->label(__('lang.identity.issue_date'))
+                            ->date(),
 
-                                    ])->columns(3),
+                        Infolists\Components\TextEntry::make('data_expirare')
+                            ->label(__('lang.identity.expiry_date'))
+                            ->date(),
+                            ]),
 
-                                Infolists\Components\Fieldset::make('Loc Nastere')
-                                    ->schema([
-                                        Infolists\Components\TextEntry::make('oras_nastere'),
-                                        Infolists\Components\TextEntry::make('judet_nastere'),
 
-                                    ])->columns(2),
+                        // Current Address
+                        Infolists\Components\Fieldset::make(__('lang.identity.current_address'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('domiciliu')
+                                    ->label(__('lang.identity.domicile'))
+                                    ->hidden(fn(Member $record) => empty($record->domiciliu)),
+                                Infolists\Components\TextEntry::make('oras')
+                                    ->label(__('lang.identity.city'))
+                                    ->hidden(fn(Member $record) => empty($record->oras)),
+                                Infolists\Components\TextEntry::make('judet')
+                                    ->label(__('lang.identity.county'))
+                                    ->hidden(fn(Member $record) => empty($record->judet)),
+                            ])
+                            ->columns(3)
+                            ->hidden(fn(Member $record) => empty($record->domiciliu) && empty($record->oras) && empty($record->judet)),
 
-                            ])->columns(2),
-
+                        // Birth Place
+                        Infolists\Components\Fieldset::make(__('lang.identity.birth_place'))
+                            ->schema([
+                                Infolists\Components\TextEntry::make('oras_nastere')
+                                    ->label(__('lang.identity.birth_city'))
+                                    ->hidden(fn(Member $record) => empty($record->oras_nastere)),
+                                Infolists\Components\TextEntry::make('judet_nastere')
+                                    ->label(__('lang.identity.birth_county'))
+                                    ->hidden(fn(Member $record) => empty($record->judet_nastere)),
+                            ])
+                            ->columns(2)
+                            ->hidden(fn(Member $record) => empty($record->oras_nastere) && empty($record->judet_nastere)),
                     ])
                     ->columns(2)
                     ->columnSpan(2),
 
-                Section::make('Informatii')
+                // Contact Information Section
+                Section::make(__('lang.contact.section_title'))
                     ->schema([
-                        Infolists\Components\Group::make()
-                            ->label('Informatii de contact')
-                            ->schema([
-                                Infolists\Components\TextEntry::make('contact_phone')
-                                    ->label('Telefon')
-                                    ->state(fn(Member $record) => $record->contact_infos()->where('tip_info', 'telefon')->latest('created_at')->first()?->info ?? 'N/A'),
-                                Infolists\Components\TextEntry::make('contact_email')
-                                    ->label('Email')
-                                    ->state(fn(Member $record) => $record->contact_infos()->where('tip_info', 'email')->latest('created_at')->first()?->info ?? 'N/A'),
-                                Infolists\Components\TextEntry::make('contact_address')
-                                    ->label('Adresa Corespondenta')
-                                    ->state(fn(Member $record) => $record->contact_infos()->where('tip_info', 'adresa_corespondenta')->latest('created_at')->first()?->info ?? 'N/A'),
-                            ])->columns(3)
-                            ->hidden(fn(Member $record) => $record->contact_infos()->count() === 0),
+                        Infolists\Components\TextEntry::make('contact_phone')
+                            ->label(__('lang.contact.phone'))
+                            ->state(fn(Member $record) => $record->contact_infos()->where('tip_info', 'telefon')->latest('created_at')->first()?->info)
+                            ->tooltip(fn(Member $record) => $record->contact_infos()->where('tip_info', 'telefon')->latest('created_at')->first()?->created_at?->format('d.m.Y'))
+                            ->hidden(fn(Member $record) => empty($record->contact_infos()->where('tip_info', 'telefon')->latest('created_at')->first()?->info)),
 
-                        Infolists\Components\Group::make()
-                            ->label('Informatii angajare')
-                            ->schema([
-                                Infolists\Components\TextEntry::make('workplace_employer')
-                                    ->label('Angajat la')
-                                    ->state(fn(Member $record) => $record->workplaces()->latest('member_workplace.updated_at')->first()?->employer ?? 'N/A'),
-                                Infolists\Components\TextEntry::make('workplace_contact')
-                                    ->label('Angajator Contact')
-                                    ->state(fn(Member $record) => $record->workplaces()->latest('member_workplace.updated_at')->first()?->contact ?? 'N/A'),
-                                Infolists\Components\TextEntry::make('workplace_since')
-                                    ->label('De la data')
-                                    ->state(fn(Member $record) => $record->workplaces()->latest('member_workplace.updated_at')->first()?->pivot?->data_cim ?? 'N/A'),
-                            ])->columns(3)
-                            ->hidden(fn(Member $record) => $record->workplaces()->count() === 0),
+                        Infolists\Components\TextEntry::make('contact_email')
+                            ->label(__('lang.contact.email'))
+                            ->state(fn(Member $record) => $record->contact_infos()->where('tip_info', 'email')->latest('created_at')->first()?->info)
+                            ->tooltip(fn(Member $record) => $record->contact_infos()->where('tip_info', 'email')->latest('created_at')->first()?->created_at?->format('d.m.Y'))
+                            ->hidden(fn(Member $record) => empty($record->contact_infos()->where('tip_info', 'email')->latest('created_at')->first()?->info)),
 
-                        Infolists\Components\Group::make()
-                            ->schema([
-                                Infolists\Components\TextEntry::make('member_joined_date')
-                                    ->label('Data cand a devenit membru')
-                                    ->state(fn(Member $record) => $record->created_at?->toDateString() ?? 'N/A')
-                                    ->since(),
-                                Infolists\Components\TextEntry::make('last_payment_date')
-                                    ->label('Data ultimei plati')
-                                    ->state(fn(Member $record) => $record->debts()->with('payment')->get()->flatMap(fn($debt) => $debt->payment)->sortByDesc('data')->first()?->data)
-                                    ->since(),
-                            ])->columns(2),
-
+                        Infolists\Components\TextEntry::make('contact_address')
+                            ->label(__('lang.contact.address'))
+                            ->state(fn(Member $record) => $record->contact_infos()->where('tip_info', 'adresa_corespondenta')->latest('created_at')->first()?->info)
+                            ->tooltip(fn(Member $record) => $record->contact_infos()->where('tip_info', 'adresa_corespondenta')->latest('created_at')->first()?->created_at?->format('d.m.Y'))
+                            ->hidden(fn(Member $record) => empty($record->contact_infos()->where('tip_info', 'adresa_corespondenta')->latest('created_at')->first()?->info)),
                     ])
+                    ->columns(1)
+                    ->columnSpan(1)
+                    ->hidden(fn(Member $record) => $record->contact_infos()->count() === 0),
 
-                    ->columnSpan(1),
+                // Employment Information Section
+                Section::make(__('lang.employment.section_title'))
+                    ->schema([
+                        Infolists\Components\TextEntry::make('workplace_employer')
+                            ->label(__('lang.employment.employer'))
+                            ->state(fn(Member $record) => $record->workplaces()->latest('member_workplace.updated_at')->first()?->employer)
+                            ->hidden(fn(Member $record) => empty($record->workplaces()->latest('member_workplace.updated_at')->first()?->employer)),
 
-                // Section::make('Debts')
-                // ->hidden(
-                //     fn(Member $record) => $record->debts()->count() == 0)
-                //     ->schema([
-                //         Infolists\Components\RepeatableEntry::make('debts')
-                //             ->label('Debts')
+                        Infolists\Components\TextEntry::make('workplace_contact')
+                            ->label(__('lang.employment.contact'))
+                            ->state(function (Member $record) {
+                                $contact = $record->workplaces()->latest('member_workplace.updated_at')->first()?->contact;
+                                if (empty($contact)) {
+                                    return null;
+                                }
+                                // Try to parse JSON if it looks like JSON
+                                if (str_starts_with($contact, '{') && str_ends_with($contact, '}')) {
+                                    $decoded = json_decode($contact, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && isset($decoded['contact'])) {
+                                        return $decoded['contact'];
+                                    }
+                                }
+                                return $contact;
+                            })
+                            ->hidden(fn(Member $record) => empty($record->workplaces()->latest('member_workplace.updated_at')->first()?->contact)),
 
-                //             ->schema([
+                        Infolists\Components\TextEntry::make('workplace_since')
+                            ->label(__('lang.employment.since'))
+                            ->state(fn(Member $record) => $record->workplaces()->latest('member_workplace.updated_at')->first()?->pivot?->data_cim)
+                            ->date()
+                            ->hidden(fn(Member $record) => empty($record->workplaces()->latest('member_workplace.updated_at')->first()?->pivot?->data_cim)),
+                    ])
+                    ->columns(1)
+                    ->columnSpan(1)
+                    ->hidden(fn(Member $record) => $record->workplaces()->count() === 0),
 
-                //                 Infolists\Components\TextEntry::make('suma'),
-                //                 Infolists\Components\TextEntry::make('data_acordare'),
+                // Membership Info Section
+                Section::make(__('lang.membership.section_title'))
+                    ->schema([
+                        Infolists\Components\TextEntry::make('member_joined_date')
+                            ->label(__('lang.membership.joined_date'))
+                            ->state(fn(Member $record) => $record->created_at)
+                            ->since(),
 
-                //             ])
-                //             ->columns(2),
-                //     ]),
+                        Infolists\Components\TextEntry::make('last_payment_date')
+                            ->label(__('lang.membership.last_payment'))
+                            ->state(fn(Member $record) => $record->debts()->with('payment')->get()->flatMap(fn($debt) => $debt->payment)->sortByDesc('data')->first()?->data)
+                            ->since()
+                            ->hidden(fn(Member $record) => empty($record->debts()->with('payment')->get()->flatMap(fn($debt) => $debt->payment)->sortByDesc('data')->first()?->data)),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
 
-                Section::make('Imprumuturi')
-                    ->hidden(
-                        fn(Member $record) => $record->debts()->count() == 0)
+                // Loans Section
+                Section::make(__('lang.loans.section_title'))
+                    ->hidden(fn(Member $record) => $record->debts()->count() == 0)
                     ->schema([
                         Livewire::make(ViewImprumut::class)
                             ->columnSpanFull(),
-                    ]),
+                    ])
+                    ->columnSpanFull(),
 
-            ])->columns(3);
-
+            ])
+            ->columns(3);
     }
 
     public static function form(Form $form): Form
@@ -435,7 +456,7 @@ class MemberResource extends Resource
                         $latestIdentity = $record->previous_identities()
                             ->latest('data_emitere')
                             ->first();
-                        
+
                         if ($latestIdentity) {
                             $parts = array_filter([
                                 $latestIdentity->oras_nastere,
@@ -443,7 +464,7 @@ class MemberResource extends Resource
                             ]);
                             return implode(', ', $parts);
                         }
-                        
+
                         // Fallback to member's own data if no previous identities
                         $parts = array_filter([
                             $record->oras_nastere,
