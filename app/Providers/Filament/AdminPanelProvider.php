@@ -9,6 +9,7 @@ use App\Filament\Pages\ViewLog;
 use Awcodes\FilamentQuickCreate\QuickCreatePlugin;
 use Edwink\FilamentUserActivity\FilamentUserActivityPlugin;
 use Filament\Facades\Filament;
+use Filament\Support\Facades\FilamentView;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -140,6 +141,13 @@ class AdminPanelProvider extends PanelProvider
                 ]),
 
                     ]);
+
+        // Register a small locale switcher to appear on the My Profile page
+        FilamentView::registerRenderHook(
+            \Filament\View\PanelsRenderHook::PAGE_START,
+            fn () => view('livewire.locale-switcher'),
+            scopes: [\Jeffgreco13\FilamentBreezy\Pages\MyProfilePage::class]
+        );
 
 
     }

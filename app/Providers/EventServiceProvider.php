@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
@@ -25,7 +26,12 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // When a user logs in, persist their preferred locale to the session
+        Event::listen(Login::class, function (Login $event) {
+            if ($event->user && $event->user->locale) {
+                session(['locale' => $event->user->locale]);
+            }
+        });
     }
 
     /**

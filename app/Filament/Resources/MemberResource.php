@@ -155,7 +155,7 @@ class MemberResource extends Resource
                                     ->since(),
                                 Infolists\Components\TextEntry::make('last_payment_date')
                                     ->label('Data ultimei plati')
-                                    ->state(fn(Member $record) => $record->debts()->with('payment')->get()->flatMap(fn($debt) => $debt->payment)->sortByDesc('data')->first()?->data ?? 'Fara plati')
+                                    ->state(fn(Member $record) => $record->debts()->with('payment')->get()->flatMap(fn($debt) => $debt->payment)->sortByDesc('data')->first()?->data)
                                     ->since(),
                             ])->columns(2),
 

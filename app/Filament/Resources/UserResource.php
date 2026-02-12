@@ -63,6 +63,11 @@ class UserResource extends Resource
                     ->password()
                     ->required(),
                 Forms\Components\FileUpload::make('avatar_url'),
+                Forms\Components\Select::make('locale')
+                    ->label('Language')
+                    ->options(config('app.available_locales'))
+                    ->default(config('app.locale'))
+                    ->required(),
                 Forms\Components\Select::make('roles')
                     ->relationship('roles', 'name')
                     ->multiple()
