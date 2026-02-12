@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cf3196d93ec5b8944bed2d6cb3af24ea",
+    "content-hash": "5dce3b82c03d636736468d2a87b63bba",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -425,6 +425,87 @@
                 }
             ],
             "time": "2024-02-07T16:09:20+00:00"
+        },
+        {
+            "name": "bostos/reorderable-columns",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Bostos/reorderable-columns.git",
+                "reference": "6c323d0ff2d550ad008e68574669e922e4077d12"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Bostos/reorderable-columns/zipball/6c323d0ff2d550ad008e68574669e922e4077d12",
+                "reference": "6c323d0ff2d550ad008e68574669e922e4077d12",
+                "shasum": ""
+            },
+            "require": {
+                "filament/tables": "^3.0",
+                "php": "^8.1",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^7.9",
+                "nunomaduro/larastan": "^2.0.1",
+                "orchestra/testbench": "^8.0",
+                "pestphp/pest": "^2.1",
+                "pestphp/pest-plugin-arch": "^2.0",
+                "pestphp/pest-plugin-laravel": "^2.0",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan-deprecation-rules": "^1.0",
+                "phpstan/phpstan-phpunit": "^1.0",
+                "spatie/laravel-ray": "^1.26"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "ReorderableColumns": "Bostos\\ReorderableColumns\\Facades\\ReorderableColumns"
+                    },
+                    "providers": [
+                        "Bostos\\ReorderableColumns\\ReorderableColumnsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Bostos\\ReorderableColumns\\": "src/",
+                    "Bostos\\ReorderableColumns\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bostos",
+                    "email": "nikolast_metal@hotmail.com",
+                    "role": "PHP Developer"
+                }
+            ],
+            "description": "This is my package reorderable-columns",
+            "homepage": "https://github.com/bostos/reorderable-columns",
+            "keywords": [
+                "Bostos",
+                "filament",
+                "filament-tables",
+                "laravel",
+                "reorderable-columns"
+            ],
+            "support": {
+                "issues": "https://github.com/bostos/reorderable-columns/issues",
+                "source": "https://github.com/bostos/reorderable-columns"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Bostos",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-06-16T13:49:34+00:00"
         },
         {
             "name": "brick/math",

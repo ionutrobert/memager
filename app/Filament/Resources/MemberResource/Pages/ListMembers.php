@@ -4,6 +4,7 @@ namespace App\Filament\Resources\MemberResource\Pages;
 
 use App\Filament\Resources\MemberResource;
 use App\Models\Member;
+use Bostos\ReorderableColumns\Concerns\HasReorderableColumns;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Resources\Pages\ListRecords;
@@ -13,7 +14,10 @@ use Illuminate\Support\Stringable;
 
 class ListMembers extends ListRecords
 {
+    use HasReorderableColumns;
+
     protected static string $resource = MemberResource::class;
+    protected static string $view = 'filament.resources.members.pages.list-members';
 
     protected function getHeaderActions(): array
     {

@@ -11,6 +11,7 @@
         "php": "^8.1",
         "awcodes/filament-quick-create": "^3.3",
         "bezhansalleh/filament-shield": "^3.2",
+        "bostos/reorderable-columns": "^1.1",
         "cknow/laravel-money": "*",
         "coolsam/flatpickr": "^3.1",
         "edwink/filament-user-activity": "^1.0",

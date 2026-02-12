@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\MemberResource\Pages;
 use App\Livewire\ViewImprumut;
+use App\Models\ContactInfo;
 use App\Models\Member;
 use App\Models\PreviousIdentity;
 use App\Models\User;
@@ -339,21 +340,24 @@ class MemberResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('full_name')
                     ->label('Nume Complet')
                     ->searchable()
-                    ->sortable()
-                    ->toggleable()
-                    ->action(Tables\Actions\ViewAction::make()),
-                Tables\Columns\TextColumn::make('CNP')
-                    ->label('CNP')
-                    ->searchable()
-                    ->sortable()
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->orderBy('nume', $direction)->orderBy('prenume', $direction);
+                    })
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('Validitate_CNP')
+                Tables\Columns\TextColumn::make('col_cnp')
+                    ->label('CNP')
+                    ->state(fn(Member $record) => $record->CNP)
+                    ->searchable(query: fn(Builder $query, string $search) => $query->where('CNP', 'like', "%{$search}%"))
+                    ->sortable(query: fn(Builder $query, string $direction) => $query->orderBy('CNP', $direction))
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('col_validitate_cnp')
                     ->label('Validitate CNP')
-                    ->default(fn(Member $record) => Cnp::valid($record->CNP) ? 'Valid' : 'Invalid')
+                    ->state(fn(Member $record) => Cnp::valid($record->CNP) ? 'Valid' : 'Invalid')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Valid' => 'success',
@@ -375,30 +379,35 @@ class MemberResource extends Resource
                 Tables\Columns\TextColumn::make('phone_number')
                     ->label('Telefon')
                     ->state(function (Member $record): ?string {
-                        $contactInfo = $record->contact_info;
-                        if (is_array($contactInfo)) {
-                            foreach ($contactInfo as $info) {
-                                if (isset($info['contact_info.tip']) && $info['contact_info.tip'] === 'telefon') {
-                                    return $info['contact_info.info'];
-                                }
-                            }
-                        }
-                        return null;
+                        return $record->contact_infos()
+                            ->where('tip_info', 'telefon')
+                            ->latest('created_at')
+                            ->first()
+                            ?->info;
                     })
-                    ->searchable()
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->whereHas('contact_infos', function ($q) use ($search) {
+                            $q->where('tip_info', 'telefon')
+                              ->where('info', 'like', "%{$search}%");
+                        });
+                    })
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->orderBy(
+                            ContactInfo::select('info')
+                                ->whereColumn('contact_infos.member_id', 'members.id')
+                                ->where('tip_info', 'telefon')
+                                ->latest('created_at')
+                                ->limit(1),
+                            $direction
+                        );
+                    })
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('ci_serie')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('ci_numar')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('CI')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('col_ci')
+                    ->label('CI')
+                    ->state(fn(Member $record) => $record->CI)
+                    ->searchable(query: fn(Builder $query, string $search) => $query->whereRaw("CONCAT(ci_serie, ' ', ci_numar) LIKE ?", ["%{$search}%"]))
+                    ->sortable(query: fn(Builder $query, string $direction) => $query->orderBy('ci_serie', $direction)->orderBy('ci_numar', $direction))
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('emis_de')
                     ->searchable()
                     ->sortable()
@@ -411,14 +420,38 @@ class MemberResource extends Resource
                     ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('nume')
-                    ->searchable()
+                Tables\Columns\TextColumn::make('loc_nastere')
+                    ->label('Loc Naștere')
+                    ->state(function (Member $record): ?string {
+                        $latestIdentity = $record->previous_identities()
+                            ->latest('data_emitere')
+                            ->first();
+                        
+                        if ($latestIdentity) {
+                            $parts = array_filter([
+                                $latestIdentity->oras_nastere,
+                                $latestIdentity->judet_nastere
+                            ]);
+                            return implode(', ', $parts);
+                        }
+                        
+                        // Fallback to member's own data if no previous identities
+                        $parts = array_filter([
+                            $record->oras_nastere,
+                            $record->judet_nastere
+                        ]);
+                        return implode(', ', $parts) ?: null;
+                    })
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->whereHas('previous_identities', function ($q) use ($search) {
+                            $q->where('oras_nastere', 'like', "%{$search}%")
+                              ->orWhere('judet_nastere', 'like', "%{$search}%");
+                        })
+                        ->orWhere('oras_nastere', 'like', "%{$search}%")
+                        ->orWhere('judet_nastere', 'like', "%{$search}%");
+                    })
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('prenume')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('cetatenie')
                     ->searchable()
                     ->sortable()
@@ -428,10 +461,6 @@ class MemberResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('domiciliu')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('loc_nastere')
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -462,13 +491,7 @@ class MemberResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                ]),
-            ]);
+            ->reorderableColumns('members');
     }
 
     public static function getRelations(): array

@@ -142,6 +142,8 @@ class AdminPanelProvider extends PanelProvider
                     ->includes([
                         \App\Filament\Resources\UserResource::class,
                     ]),
+                \Bostos\ReorderableColumns\ReorderableColumnsPlugin::make()
+                    ->persistToSession(),
             ]);
 
         // Locale switcher — see git history for prior implementation.
