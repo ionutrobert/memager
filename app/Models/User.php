@@ -32,7 +32,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
         'email',
         'password',
         'avatar_url',
-        'locale'
+        // 'locale' removed during rollback
     ];
 
     /**

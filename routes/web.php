@@ -17,4 +17,15 @@ use App\Http\Controllers\CnpCheckController;
 
 Route::get('/cnp-check', [CnpCheckController::class, 'check']);
 
+// Language switcher route
+Route::get('lang/{lang}', function ($lang) {
+    $availableLocales = ['en', 'ro'];
+    
+    if (in_array($lang, $availableLocales)) {
+        session()->put('current_lang', $lang);
+    }
+
+    return redirect()->back();
+})->name('lang.switch');
+
 

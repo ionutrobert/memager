@@ -20,6 +20,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -27,6 +28,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use App\Http\Middleware\SetLang;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -70,6 +72,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                SetLang::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
@@ -141,18 +144,13 @@ class AdminPanelProvider extends PanelProvider
                     ]),
             ]);
 
-        // Register a small locale switcher to appear on the My Profile page and in the user menu profile area
-        FilamentView::registerRenderHook(
-            \Filament\View\PanelsRenderHook::PAGE_START,
-            fn () => \Livewire\Livewire::mount('locale-switcher')->html(),
-            scopes: [\Jeffgreco13\FilamentBreezy\Pages\MyProfilePage::class]
-        );
+        // Locale switcher — see git history for prior implementation.
+        $panel = $panel
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_PROFILE_AFTER,
+                fn (): \Illuminate\Contracts\View\View => view('filament.hooks.lang-switcher'),
+            );
 
-        // Inject locale switcher into the user menu profile area (appears in the account dropdown)
-        FilamentView::registerRenderHook(
-            \Filament\View\PanelsRenderHook::USER_MENU_PROFILE_AFTER,
-            fn () => \Livewire\Livewire::mount('locale-switcher')->html()
-        );
         return $panel;
     }
 }
