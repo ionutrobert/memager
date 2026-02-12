@@ -344,7 +344,13 @@ class MemberResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('full_name')
                     ->label('Nume Complet')
-                    ->searchable()
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        $lowerSearch = strtolower($search);
+                        return $query->where(function ($q) use ($lowerSearch) {
+                            $q->where('nume', 'like', "%{$lowerSearch}%")
+                              ->orWhere('prenume', 'like', "%{$lowerSearch}%");
+                        });
+                    })
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return $query->orderBy('nume', $direction)->orderBy('prenume', $direction);
                     })
@@ -405,7 +411,10 @@ class MemberResource extends Resource
                 Tables\Columns\TextColumn::make('col_ci')
                     ->label('CI')
                     ->state(fn(Member $record) => $record->CI)
-                    ->searchable(query: fn(Builder $query, string $search) => $query->whereRaw("CONCAT(ci_serie, ' ', ci_numar) LIKE ?", ["%{$search}%"]))
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->where('ci_serie', 'like', "%{$search}%")
+                                     ->orWhere('ci_numar', 'like', "%{$search}%");
+                    })
                     ->sortable(query: fn(Builder $query, string $direction) => $query->orderBy('ci_serie', $direction)->orderBy('ci_numar', $direction))
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('emis_de')
